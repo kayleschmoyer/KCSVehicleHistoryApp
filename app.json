@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "KCSVehicleHistoryApp",
-    "slug": "KCSVehicleHistoryApp",
+    "name": "KCS Vehicle History",
+    "slug": "KCS-Vehicle-History",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
