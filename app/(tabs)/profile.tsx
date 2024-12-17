@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import Theme from "@/constants/theme"; // Use Theme for consistent styling
+import Theme from "@/constants/theme";
 
 export default function ProfileScreen() {
   return (
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   editButtonText: {
-    color: Theme.colors.text, // Use a contrasting text color
+    color: Theme.colors.text,
     fontWeight: "bold",
     fontSize: 16,
   },

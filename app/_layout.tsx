@@ -11,17 +11,16 @@ export default function RootLayout() {
     const checkAuth = async () => {
       try {
         const token = await AsyncStorage.getItem("authToken");
-        setIsLoggedIn(!!token); // true if token exists, false otherwise
+        setIsLoggedIn(!!token); // Set logged-in state based on token
       } catch (error) {
         console.error("Error reading auth token:", error);
-        setIsLoggedIn(false);
+        setIsLoggedIn(false); // Default to logged-out state on error
       }
     };
     checkAuth();
   }, []);
 
   if (isLoggedIn === null) {
-    // Show a loading spinner while determining login status
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Theme.colors.primary} />
@@ -29,14 +28,12 @@ export default function RootLayout() {
     );
   }
 
-  // Let the Stack handle rendering the correct screen based on `isLoggedIn`
   return (
     <Stack>
-      {isLoggedIn ? (
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      ) : (
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-      )}
+      <Stack.Screen
+        name={isLoggedIn ? "(tabs)" : "login"}
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

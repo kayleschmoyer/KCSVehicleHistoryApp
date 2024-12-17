@@ -22,10 +22,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
-    color: "#E91E63", // Magenta
+    color: "#E91E63",
   },
   subtitle: {
     fontSize: 16,
-    color: "#7E7E7E", // Grey 50%
+    color: "#7E7E7E",
   },
 });

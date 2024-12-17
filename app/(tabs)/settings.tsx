@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Switch } from "react-native";
-import Theme from "@/constants/theme"; // Import Theme for consistent styling
+import Theme from "@/constants/theme";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(false);

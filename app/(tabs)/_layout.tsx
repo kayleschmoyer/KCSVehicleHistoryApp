@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import Theme from "@/constants/theme"; // Correctly import Theme
+import Theme from "@/constants/theme";
 
 export default function TabLayout() {
   return (

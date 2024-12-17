@@ -24,7 +24,7 @@ const darkTheme = {
   primary: baseColors.magenta,
   secondary: baseColors.grey50,
   border: baseColors.grey30,
-  cardBackground: "#1D1D1D", // Darker Graphite
+  cardBackground: "#1D1D1D",
   placeholder: baseColors.grey30,
 };
 

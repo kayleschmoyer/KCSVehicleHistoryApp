@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import Theme from "@/constants/theme"; // Use Theme constants for consistent styling
+import Theme from "@/constants/theme";
 
 type VehicleHistory = {
   id: string;

@@ -9,7 +9,7 @@ const Theme = {
       text: "#212121",       // Dark Grey
       success: "#4CAF50", // Green for success
       error: "#F44336", // Red for errors
-      gradient: ["#E91E63", "#673AB7"] as [string, string], // Enforce tuple type
+      gradient: ["#E91E63", "#673AB7"] as [string, string],
     },
     fonts: {
       regular: "SpaceMono-Regular",

@@ -1,67 +1,76 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
-import Theme from "@/constants/theme"; // Import updated Theme constants
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import Theme from "@/constants/theme";
 
-const mockVehicles = [
-  {
-    id: "1",
-    make: "Tesla",
-    model: "Model S",
-    year: 2021,
-    warranty: "Active",
-    image: "https://example.com/tesla.jpg", // Placeholder image URL
-  },
-  {
-    id: "2",
-    make: "Toyota",
-    model: "Corolla",
-    year: 2018,
-    warranty: "Expired",
-    image: "https://example.com/toyota.jpg", // Placeholder image URL
-  },
-];
+type Vehicle = {
+  make: string;
+  model: string;
+  year: number;
+  warranty?: string;
+};
 
 export default function DashboardScreen() {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const token = await AsyncStorage.getItem("authToken");
+        if (!token) {
+          Alert.alert("Error", "No authentication token found.");
+          router.replace("/login");
+          return;
+        }
+
+        const response = await axios.get(
+          "http://localhost:3000/api/vehicles",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setVehicles(response.data);
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+        Alert.alert("Error", "Unable to fetch vehicles.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Theme.colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your Vehicles</Text>
-      <FlatList
-        data={mockVehicles}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card}>
-            <Image
-              source={{ uri: item.image }}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>
-                {item.make} {item.model} ({item.year})
-              </Text>
-              <Text
-                style={[
-                  styles.cardSubtitle,
-                  item.warranty === "Active"
-                    ? styles.activeWarranty
-                    : styles.expiredWarranty,
-                ]}
-              >
-                Warranty: {item.warranty}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {vehicles.map((vehicle, index) => (
+        <View key={index} style={styles.vehicleCard}>
+          <Text style={styles.vehicleText}>
+            {vehicle.make} {vehicle.model} ({vehicle.year})
+          </Text>
+          <Text style={styles.vehicleText}>
+            Warranty: {vehicle.warranty || "N/A"}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -72,44 +81,30 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background,
     padding: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
     color: Theme.colors.primary,
     marginBottom: 20,
-    textAlign: "center",
   },
-  listContent: {
-    paddingBottom: 20,
-  },
-  card: {
-    backgroundColor: Theme.colors.background,
-    borderRadius: 15,
-    marginBottom: 15,
-    overflow: "hidden", // Ensure content stays within the card
-    elevation: 3, // Subtle shadow effect
-  },
-  cardImage: {
-    width: "100%",
-    height: 150,
-  },
-  cardContent: {
+  vehicleCard: {
     padding: 15,
+    marginBottom: 10,
+    backgroundColor: Theme.colors.grey15,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+  vehicleText: {
+    fontSize: 16,
     color: Theme.colors.text,
-    marginBottom: 5,
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  activeWarranty: {
-    color: Theme.colors.success, // Green for active warranties
-  },
-  expiredWarranty: {
-    color: Theme.colors.error, // Red for expired warranties
   },
 });

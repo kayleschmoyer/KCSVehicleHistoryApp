@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import Theme from "@/constants/theme"; // Use your Theme constants
+import Theme from "@/constants/theme";
 
 type Warranty = {
   id: string;
