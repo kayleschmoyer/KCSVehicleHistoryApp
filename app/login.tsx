@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Theme from "@/constants/theme";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 
 // Define the expected structure of the login response
@@ -39,26 +40,30 @@ export default function LoginScreen() {
       Alert.alert("Error", "Please fill in both email and password.");
       return;
     }
-
+  
     setIsLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/login`, {
+      // Specify the expected response type with generics
+      const response = await axios.post<LoginResponse>(`${API_BASE_URL}/login`, {
         email,
         password,
       });
-
-      const { token } = response.data as LoginResponse;
-
+  
+      const { token } = response.data; // Type is now inferred correctly
+  
+      // Save token in AsyncStorage
+      await AsyncStorage.setItem("authToken", token);
+      console.log("Token saved:", token);
+  
       Alert.alert("Login Successful", "You are now logged in.");
-      // Navigate to Dashboard
-      router.replace("/dashboard");
+      router.replace("/dashboard"); // Navigate to dashboard
     } catch (error: any) {
       console.error("Login Error:", error);
       Alert.alert("Error", error.response?.data?.message || "Login failed.");
     } finally {
       setIsLoading(false);
     }
-  };
+  };  
 
   // Handle Signup
   const handleSignup = async () => {
@@ -66,17 +71,23 @@ export default function LoginScreen() {
       Alert.alert("Error", "All fields are required.");
       return;
     }
-
+  
     setIsSubmitting(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/signup`, {
-        firstName,
-        lastName,
-        email,
-        password,
-      });
-
-      Alert.alert("Signup Successful", response.data.message);
+      // Specify the expected response type with generics
+      const response = await axios.post<{ message: string }>(
+        `${API_BASE_URL}/signup`,
+        {
+          firstName,
+          lastName,
+          email,
+          password,
+        }
+      );
+  
+      const { message } = response.data; // Now TypeScript knows 'data.message' exists
+  
+      Alert.alert("Signup Successful", message);
       setIsModalVisible(false);
     } catch (error: any) {
       console.error("Signup Error:", error);
@@ -87,7 +98,7 @@ export default function LoginScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  };  
 
   return (
     <View style={styles.container}>

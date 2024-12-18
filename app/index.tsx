@@ -1,12 +1,19 @@
+import { useEffect } from "react";
 import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
 
-export default function IndexRedirect() {
+const Index = () => {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/login");
-  }, [router]);
+    // Ensure navigation occurs only after layout mount
+    const timer = setTimeout(() => {
+      router.replace("/dashboard");
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return null;
-}
+};
+
+export default Index;
