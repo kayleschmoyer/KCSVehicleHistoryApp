@@ -5,17 +5,20 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  FlatList,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { MaterialIcons } from "@expo/vector-icons";
 import Theme from "@/constants/theme";
 
 type Vehicle = {
-  make: string;
-  model: string;
-  year: number;
-  warranty?: string;
+  year: number; // CAR_YEAR
+  make: string; // MAKE
+  model: string; // MODEL
+  vin: string; // VIN_NUMBER
+  color: string; // CAR_COLOR
 };
 
 export default function DashboardScreen() {
@@ -33,12 +36,12 @@ export default function DashboardScreen() {
           return;
         }
 
-        const response = await axios.get(
-          "http://localhost:3000/api/vehicles",
+        const response = await axios.get<Vehicle[]>(
+          "http://192.168.7.192:3000/api/vehicles",
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        setVehicles(response.data);
+        setVehicles(response.data); // Set the fetched vehicles
       } catch (error) {
         console.error("Error fetching vehicles:", error);
         Alert.alert("Error", "Unable to fetch vehicles.");
@@ -61,16 +64,32 @@ export default function DashboardScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your Vehicles</Text>
-      {vehicles.map((vehicle, index) => (
-        <View key={index} style={styles.vehicleCard}>
-          <Text style={styles.vehicleText}>
-            {vehicle.make} {vehicle.model} ({vehicle.year})
-          </Text>
-          <Text style={styles.vehicleText}>
-            Warranty: {vehicle.warranty || "N/A"}
+
+      {vehicles.length === 0 ? (
+        // Message when no vehicles are found
+        <View style={styles.noVehiclesContainer}>
+          <MaterialIcons name="info-outline" size={50} color={Theme.colors.error} />
+          <Text style={styles.noVehiclesText}>
+            No vehicles found. Please check back later!
           </Text>
         </View>
-      ))}
+      ) : (
+        // List of vehicles
+        <FlatList
+          data={vehicles}
+          renderItem={({ item }) => (
+            <View style={styles.vehicleCard}>
+              <Text style={styles.vehicleTitle}>
+                {item.make} {item.model} ({item.year})
+              </Text>
+              <Text style={styles.vehicleDetail}>VIN: {item.vin}</Text>
+              <Text style={styles.vehicleDetail}>Color: {item.color}</Text>
+            </View>
+          )}
+          keyExtractor={(_, index) => index.toString()}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      )}
     </View>
   );
 }
@@ -79,7 +98,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Theme.colors.background,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -87,10 +107,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: Theme.colors.primary,
     marginBottom: 20,
+  },
+  noVehiclesContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noVehiclesText: {
+    fontSize: 18,
+    color: Theme.colors.error,
+    marginTop: 10,
+    textAlign: "center",
   },
   vehicleCard: {
     padding: 15,
@@ -101,10 +132,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
-  vehicleText: {
-    fontSize: 16,
+  vehicleTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
     color: Theme.colors.text,
+  },
+  vehicleDetail: {
+    fontSize: 14,
+    color: Theme.colors.grey50,
   },
 });
