@@ -13,12 +13,24 @@ import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import Theme from "@/constants/theme";
 
+// Define the structure of the API response
+type ApiResponse = {
+  cars: {
+    CAR_YEAR: number;
+    MAKE: string;
+    MODEL: string;
+    VIN_NUMBER: string;
+    CAR_COLOR: string;
+  }[];
+};
+
+// Define the type for vehicles
 type Vehicle = {
-  year: number; // CAR_YEAR
-  make: string; // MAKE
-  model: string; // MODEL
-  vin: string; // VIN_NUMBER
-  color: string; // CAR_COLOR
+  year: number;
+  make: string;
+  model: string;
+  vin: string;
+  color: string;
 };
 
 export default function DashboardScreen() {
@@ -36,15 +48,29 @@ export default function DashboardScreen() {
           return;
         }
 
-        const response = await axios.get<Vehicle[]>(
+        const response = await axios.get<ApiResponse>(
           "http://192.168.7.192:3000/api/vehicles",
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        setVehicles(response.data); // Set the fetched vehicles
-      } catch (error) {
+        // Map API response to the expected Vehicle type
+        const mappedVehicles = response.data.cars.map((car) => ({
+          year: car.CAR_YEAR,
+          make: car.MAKE,
+          model: car.MODEL,
+          vin: car.VIN_NUMBER,
+          color: car.CAR_COLOR,
+        }));
+
+        setVehicles(mappedVehicles);
+      } catch (error: any) {
         console.error("Error fetching vehicles:", error);
-        Alert.alert("Error", "Unable to fetch vehicles.");
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          Alert.alert("Session Expired", "Please log in again.");
+          router.replace("/login");
+        } else {
+          Alert.alert("Error", "Unable to fetch vehicles.");
+        }
       } finally {
         setLoading(false);
       }
@@ -66,7 +92,6 @@ export default function DashboardScreen() {
       <Text style={styles.title}>Your Vehicles</Text>
 
       {vehicles.length === 0 ? (
-        // Message when no vehicles are found
         <View style={styles.noVehiclesContainer}>
           <MaterialIcons name="info-outline" size={50} color={Theme.colors.error} />
           <Text style={styles.noVehiclesText}>
@@ -74,7 +99,6 @@ export default function DashboardScreen() {
           </Text>
         </View>
       ) : (
-        // List of vehicles
         <FlatList
           data={vehicles}
           renderItem={({ item }) => (
