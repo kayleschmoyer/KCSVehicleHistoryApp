@@ -23,7 +23,7 @@ interface LoginResponse {
   message?: string;
 }
 
-const API_BASE_URL = Constants.manifest?.extra?.API_BASE_URL || "http://192.168.7.185:3000/api/auth";
+const API_BASE_URL = Constants.manifest?.extra?.API_BASE_URL || "http://localhost:3000/api/auth";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");

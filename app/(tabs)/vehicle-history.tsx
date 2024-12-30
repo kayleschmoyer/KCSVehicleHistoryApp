@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router"; // Updated import
+import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Theme from "@/constants/theme";
@@ -16,41 +16,43 @@ type VehicleHistory = {
   INVOICE_NUMBER: string;
   INVOICE_DATE: string;
   TOTAL_SALE_AMOUNT: string;
-  LEVEL1TAX_TOTAL?: string;
-  LEVEL2TAX_TOTAL?: string;
-  LEVEL3TAX_TOTAL?: string;
-  LEVEL4TAX_TOTAL?: string;
-  LEVEL5TAX_TOTAL?: string;
-  LEVEL6TAX_TOTAL?: string;
-  LEVEL7TAX_TOTAL?: string;
-  LEVEL8TAX_TOTAL?: string;
-  LEVEL9TAX_TOTAL?: string;
+  VIN_NUMBER: string;
+};
+
+const getAuthToken = async () => {
+  if (typeof window !== "undefined" && window.localStorage) {
+    return localStorage.getItem("authToken");
+  } else {
+    return await AsyncStorage.getItem("authToken");
+  }
 };
 
 export default function VehicleHistoryScreen() {
   const [history, setHistory] = useState<VehicleHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { vin } = useLocalSearchParams(); // Updated to use useLocalSearchParams
+  const { vin } = useLocalSearchParams();
 
   useEffect(() => {
     const fetchVehicleHistory = async () => {
+      console.log("Fetching vehicle history for VIN:", vin);
       try {
-        const token = await AsyncStorage.getItem("authToken");
+        const token = await getAuthToken();
         if (!token) {
           Alert.alert("Error", "No authentication token found.");
           router.replace("/login");
           return;
         }
 
-        const response = await axios.get<VehicleHistory[]>(
-          `http://192.168.7.185:3000/api/history?vin=${vin}`,
+        const response = await axios.get<{ history: VehicleHistory[] }>(
+          `http://192.168.7.185:3000/api/vehicles/history?vin=${vin}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        setHistory(response.data || []);
+        console.log("API Response:", response.data);
+        setHistory(response.data.history || []);
       } catch (error) {
         console.error("Error fetching vehicle history:", error);
         Alert.alert("Error", "Unable to fetch vehicle history.");
@@ -62,16 +64,16 @@ export default function VehicleHistoryScreen() {
     fetchVehicleHistory();
   }, [vin]);
 
-  const renderItem = ({ item }: { item: VehicleHistory }) => (
-    <View style={styles.historyCard}>
-      <Text style={styles.service}>Invoice #: {item.INVOICE_NUMBER}</Text>
-      <Text style={styles.date}>Date: {item.INVOICE_DATE}</Text>
-      <Text style={styles.cost}>Total Sale: ${item.TOTAL_SALE_AMOUNT}</Text>
-      {item.LEVEL1TAX_TOTAL && <Text style={styles.tax}>Tax 1: ${item.LEVEL1TAX_TOTAL}</Text>}
-      {item.LEVEL2TAX_TOTAL && <Text style={styles.tax}>Tax 2: ${item.LEVEL2TAX_TOTAL}</Text>}
-      {/* Add other taxes as needed */}
-    </View>
-  );
+  const renderItem = ({ item }: { item: VehicleHistory }) => {
+    console.log("Rendering item:", item);
+    return (
+      <View style={styles.historyCard}>
+        <Text style={styles.service}>Invoice #: {item.INVOICE_NUMBER}</Text>
+        <Text style={styles.date}>Total Sale Amount: ${item.TOTAL_SALE_AMOUNT}</Text>
+        <Text style={styles.cost}>VIN: {item.VIN_NUMBER}</Text>
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -94,7 +96,7 @@ export default function VehicleHistoryScreen() {
         <FlatList
           data={history}
           renderItem={renderItem}
-          keyExtractor={(item) => item.INVOICE_NUMBER}
+          keyExtractor={(item) => item.INVOICE_NUMBER.toString()}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -153,9 +155,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: Theme.colors.secondary,
-  },
-  tax: {
-    fontSize: 12,
-    color: Theme.colors.grey50,
   },
 });
