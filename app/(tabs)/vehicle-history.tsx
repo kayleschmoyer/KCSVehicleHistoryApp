@@ -14,9 +14,9 @@ import Theme from "@/constants/theme";
 
 type VehicleHistory = {
   INVOICE_NUMBER: string;
-  INVOICE_DATE: string;
   TOTAL_SALE_AMOUNT: string;
   VIN_NUMBER: string;
+  SERVICE_CATEGORIES: string[]; // New field to store service categories
 };
 
 const getAuthToken = async () => {
@@ -44,7 +44,7 @@ export default function VehicleHistoryScreen() {
           return;
         }
 
-        const response = await axios.get<{ history: VehicleHistory[] }>(
+        const response = await axios.get<VehicleHistory[]>(
           `http://192.168.7.185:3000/api/vehicles/history?vin=${vin}`,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -52,7 +52,7 @@ export default function VehicleHistoryScreen() {
         );
 
         console.log("API Response:", response.data);
-        setHistory(response.data.history || []);
+        setHistory(response.data || []);
       } catch (error) {
         console.error("Error fetching vehicle history:", error);
         Alert.alert("Error", "Unable to fetch vehicle history.");
@@ -71,6 +71,12 @@ export default function VehicleHistoryScreen() {
         <Text style={styles.service}>Invoice #: {item.INVOICE_NUMBER}</Text>
         <Text style={styles.date}>Total Sale Amount: ${item.TOTAL_SALE_AMOUNT}</Text>
         <Text style={styles.cost}>VIN: {item.VIN_NUMBER}</Text>
+        <Text style={styles.categories}>
+          Service Categories:{" "}
+          {item.SERVICE_CATEGORIES.length > 0
+            ? item.SERVICE_CATEGORIES.join(", ")
+            : "No specific services"}
+        </Text>
       </View>
     );
   };
@@ -155,5 +161,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: Theme.colors.secondary,
+  },
+  categories: {
+    fontSize: 14,
+    color: Theme.colors.text,
+    marginTop: 5,
   },
 });
