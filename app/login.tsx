@@ -9,11 +9,13 @@ import {
   Modal,
   Alert,
   Image,
+  Platform,
 } from "react-native";
 import Theme from "@/constants/theme";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import Constants from "expo-constants"; // Fallback for environment variables
 
 // Define the expected structure of the login response
 interface LoginResponse {
@@ -21,7 +23,7 @@ interface LoginResponse {
   message?: string;
 }
 
-const API_BASE_URL = "http://192.168.7.192:3000/api/auth";
+const API_BASE_URL = Constants.manifest?.extra?.API_BASE_URL || "http://192.168.7.185:3000/api/auth";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -34,47 +36,55 @@ export default function LoginScreen() {
 
   const router = useRouter();
 
-  // Handle Login
+  const setAuthToken = async (token: string) => {
+    if (Platform.OS === "web") {
+      localStorage.setItem("authToken", token);
+    } else {
+      await AsyncStorage.setItem("authToken", token);
+    }
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill in both email and password.");
       return;
     }
-  
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Error", "Please enter a valid email address.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Specify the expected response type with generics
       const response = await axios.post<LoginResponse>(`${API_BASE_URL}/login`, {
         email,
         password,
       });
-  
-      const { token } = response.data; // Type is now inferred correctly
-  
-      // Save token in AsyncStorage
-      await AsyncStorage.setItem("authToken", token);
+
+      const { token } = response.data;
+      await setAuthToken(token);
       console.log("Token saved:", token);
-  
+
       Alert.alert("Login Successful", "You are now logged in.");
-      router.replace("/dashboard"); // Navigate to dashboard
+      router.replace("/dashboard");
     } catch (error: any) {
       console.error("Login Error:", error);
-      Alert.alert("Error", error.response?.data?.message || "Login failed.");
+      Alert.alert("Error", error.response?.data?.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };  
+  };
 
-  // Handle Signup
   const handleSignup = async () => {
     if (!firstName || !lastName || !email || !password) {
       Alert.alert("Error", "All fields are required.");
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
-      // Specify the expected response type with generics
       const response = await axios.post<{ message: string }>(
         `${API_BASE_URL}/signup`,
         {
@@ -84,9 +94,9 @@ export default function LoginScreen() {
           password,
         }
       );
-  
-      const { message } = response.data; // Now TypeScript knows 'data.message' exists
-  
+
+      const { message } = response.data;
+
       Alert.alert("Signup Successful", message);
       setIsModalVisible(false);
     } catch (error: any) {
@@ -98,18 +108,22 @@ export default function LoginScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  };  
+  };
 
   return (
     <View style={styles.container}>
       {/* Logo */}
       <Image
         source={require("@/assets/images/kcs-logo.png")}
-        style={styles.logo}
+        style={{ width: 200, height: 200 }}
+        resizeMode="contain"
+        accessibilityLabel="KCS Logo"
       />
 
       {/* Title */}
-      <Text style={styles.title}>Welcome to KCS Vehicle History</Text>
+      <Text style={styles.title} accessibilityRole="header">
+        Welcome to KCS Vehicle History
+      </Text>
 
       {/* Input Fields */}
       <TextInput
@@ -120,6 +134,7 @@ export default function LoginScreen() {
         placeholderTextColor={Theme.colors.grey30}
         value={email}
         onChangeText={setEmail}
+        accessibilityLabel="Email Input"
       />
       <TextInput
         style={styles.input}
@@ -128,6 +143,7 @@ export default function LoginScreen() {
         placeholderTextColor={Theme.colors.grey30}
         value={password}
         onChangeText={setPassword}
+        accessibilityLabel="Password Input"
       />
 
       {/* Login Button */}
@@ -135,6 +151,7 @@ export default function LoginScreen() {
         style={[styles.loginButton, isLoading && styles.disabledButton]}
         onPress={handleLogin}
         disabled={isLoading}
+        accessibilityLabel="Login Button"
       >
         {isLoading ? (
           <ActivityIndicator size="small" color={Theme.colors.text} />
@@ -147,6 +164,7 @@ export default function LoginScreen() {
       <TouchableOpacity
         style={styles.signupButton}
         onPress={() => setIsModalVisible(true)}
+        accessibilityLabel="Sign Up Button"
       >
         <Text style={styles.signupButtonText}>Sign Up</Text>
       </TouchableOpacity>
@@ -157,6 +175,7 @@ export default function LoginScreen() {
         transparent={true}
         visible={isModalVisible}
         onRequestClose={() => setIsModalVisible(false)}
+        accessibilityLabel="Sign Up Modal"
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -168,6 +187,7 @@ export default function LoginScreen() {
               placeholderTextColor={Theme.colors.grey30}
               value={firstName}
               onChangeText={setFirstName}
+              accessibilityLabel="First Name Input"
             />
             <TextInput
               style={styles.input}
@@ -175,6 +195,7 @@ export default function LoginScreen() {
               placeholderTextColor={Theme.colors.grey30}
               value={lastName}
               onChangeText={setLastName}
+              accessibilityLabel="Last Name Input"
             />
             <TextInput
               style={styles.input}
@@ -184,6 +205,7 @@ export default function LoginScreen() {
               placeholderTextColor={Theme.colors.grey30}
               value={email}
               onChangeText={setEmail}
+              accessibilityLabel="Sign Up Email Input"
             />
             <TextInput
               style={styles.input}
@@ -192,12 +214,14 @@ export default function LoginScreen() {
               placeholderTextColor={Theme.colors.grey30}
               value={password}
               onChangeText={setPassword}
+              accessibilityLabel="Sign Up Password Input"
             />
 
             <TouchableOpacity
               style={[styles.signupButton, isSubmitting && styles.disabledButton]}
               onPress={handleSignup}
               disabled={isSubmitting}
+              accessibilityLabel="Submit Sign Up Button"
             >
               {isSubmitting ? (
                 <ActivityIndicator size="small" color={Theme.colors.background} />
@@ -209,6 +233,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={[styles.signupButton, styles.cancelButton]}
               onPress={() => setIsModalVisible(false)}
+              accessibilityLabel="Cancel Sign Up Button"
             >
               <Text style={styles.signupButtonText}>Cancel</Text>
             </TouchableOpacity>
@@ -226,12 +251,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: Theme.colors.background,
     paddingHorizontal: 20,
-  },
-  logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
-    resizeMode: "contain",
   },
   title: {
     fontSize: 24,

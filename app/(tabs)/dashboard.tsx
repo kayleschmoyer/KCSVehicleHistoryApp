@@ -6,31 +6,19 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  TouchableOpacity,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
 import Theme from "@/constants/theme";
 
-// Define the structure of the API response
-type ApiResponse = {
-  cars: {
-    CAR_YEAR: number;
-    MAKE: string;
-    MODEL: string;
-    VIN_NUMBER: string;
-    CAR_COLOR: string;
-  }[];
-};
-
-// Define the type for vehicles
 type Vehicle = {
-  year: number;
-  make: string;
-  model: string;
-  vin: string;
-  color: string;
+  CAR_YEAR: number;
+  MAKE: string;
+  MODEL: string;
+  VIN_NUMBER: string;
+  CAR_COLOR: string;
 };
 
 export default function DashboardScreen() {
@@ -48,29 +36,19 @@ export default function DashboardScreen() {
           return;
         }
 
-        const response = await axios.get<ApiResponse>(
-          "http://192.168.7.192:3000/api/vehicles",
+        const response = await axios.get<{ cars: Vehicle[] }>(
+          "http://192.168.7.185:3000/api/vehicles/",
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Map API response to the expected Vehicle type
-        const mappedVehicles = response.data.cars.map((car) => ({
-          year: car.CAR_YEAR,
-          make: car.MAKE,
-          model: car.MODEL,
-          vin: car.VIN_NUMBER,
-          color: car.CAR_COLOR,
-        }));
-
-        setVehicles(mappedVehicles);
-      } catch (error: any) {
-        console.error("Error fetching vehicles:", error);
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          Alert.alert("Session Expired", "Please log in again.");
-          router.replace("/login");
+        if (response.data && response.data.cars) {
+          setVehicles(response.data.cars); // Set fetched vehicles
         } else {
-          Alert.alert("Error", "Unable to fetch vehicles.");
+          setVehicles([]); // No vehicles found
         }
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+        Alert.alert("Error", "Unable to fetch vehicles.");
       } finally {
         setLoading(false);
       }
@@ -93,7 +71,6 @@ export default function DashboardScreen() {
 
       {vehicles.length === 0 ? (
         <View style={styles.noVehiclesContainer}>
-          <MaterialIcons name="info-outline" size={50} color={Theme.colors.error} />
           <Text style={styles.noVehiclesText}>
             No vehicles found. Please check back later!
           </Text>
@@ -104,13 +81,24 @@ export default function DashboardScreen() {
           renderItem={({ item }) => (
             <View style={styles.vehicleCard}>
               <Text style={styles.vehicleTitle}>
-                {item.make} {item.model} ({item.year})
+                {item.MAKE} {item.MODEL} ({item.CAR_YEAR})
               </Text>
-              <Text style={styles.vehicleDetail}>VIN: {item.vin}</Text>
-              <Text style={styles.vehicleDetail}>Color: {item.color}</Text>
+              <Text style={styles.vehicleDetail}>VIN: {item.VIN_NUMBER}</Text>
+              <Text style={styles.vehicleDetail}>Color: {item.CAR_COLOR}</Text>
+              <TouchableOpacity
+                style={styles.viewDetailsButton}
+                onPress={() =>
+                  router.push({
+                    pathname: "/vehicle-history",
+                    params: { vin: item.VIN_NUMBER },
+                  })
+                }
+              >
+                <Text style={styles.viewDetailsButtonText}>View Details</Text>
+              </TouchableOpacity>
             </View>
           )}
-          keyExtractor={(_, index) => index.toString()}
+          keyExtractor={(item) => item.VIN_NUMBER}
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
@@ -166,5 +154,17 @@ const styles = StyleSheet.create({
   vehicleDetail: {
     fontSize: 14,
     color: Theme.colors.grey50,
+  },
+  viewDetailsButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  viewDetailsButtonText: {
+    color: Theme.colors.background,
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
