@@ -4,7 +4,7 @@
     "slug": "KCS-Vehicle-History",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/kcs-logo.png",
+    "icon": "./assets/images/klipboard-logo-main.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/kcs-logo.png",
+        "foregroundImage": "./assets/images/klipboard-logo-main.png",
         "backgroundColor": "#ffffff"
       }
     },

@@ -6,17 +6,18 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  TouchableOpacity
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Theme from "@/constants/theme";
+import Theme from "../../constants/theme";
 
 type VehicleHistory = {
   INVOICE_NUMBER: string;
   TOTAL_SALE_AMOUNT: string;
   VIN_NUMBER: string;
-  SERVICE_CATEGORIES: string[]; // New field to store service categories
+  SERVICE_CATEGORIES: string[];
 };
 
 const getAuthToken = async () => {
@@ -30,6 +31,8 @@ const getAuthToken = async () => {
 export default function VehicleHistoryScreen() {
   const [history, setHistory] = useState<VehicleHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
+
   const router = useRouter();
   const { vin } = useLocalSearchParams();
 
@@ -44,15 +47,13 @@ export default function VehicleHistoryScreen() {
           return;
         }
 
-        const response = await axios.get<VehicleHistory[]>(
-          `http://192.168.7.185:3000/api/vehicles/history?vin=${vin}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        const response = await axios.get<{ history: VehicleHistory[] }>(
+          `http://192.168.4.34:3000/api/vehicles/history?vin=${vin}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         console.log("API Response:", response.data);
-        setHistory(response.data || []);
+        setHistory(response.data.history || []);
       } catch (error) {
         console.error("Error fetching vehicle history:", error);
         Alert.alert("Error", "Unable to fetch vehicle history.");
@@ -62,22 +63,42 @@ export default function VehicleHistoryScreen() {
     };
 
     fetchVehicleHistory();
-  }, [vin]);
+  }, [router, vin]);
 
   const renderItem = ({ item }: { item: VehicleHistory }) => {
-    console.log("Rendering item:", item);
+    const isExpanded = expandedInvoice === item.INVOICE_NUMBER;
+
     return (
-      <View style={styles.historyCard}>
-        <Text style={styles.service}>Invoice #: {item.INVOICE_NUMBER}</Text>
-        <Text style={styles.date}>Total Sale Amount: ${item.TOTAL_SALE_AMOUNT}</Text>
-        <Text style={styles.cost}>VIN: {item.VIN_NUMBER}</Text>
-        <Text style={styles.categories}>
-          Service Categories:{" "}
-          {item.SERVICE_CATEGORIES.length > 0
-            ? item.SERVICE_CATEGORIES.join(", ")
-            : "No specific services"}
-        </Text>
-      </View>
+      <TouchableOpacity
+        style={styles.historyCard}
+        onPress={() =>
+          setExpandedInvoice(
+            isExpanded ? null : item.INVOICE_NUMBER
+          )
+        }
+      >
+        <View style={styles.headerRow}>
+          <Text style={styles.invoiceNumber}>Invoice: {item.INVOICE_NUMBER}</Text>
+          <Text style={styles.amount}>${item.TOTAL_SALE_AMOUNT}</Text>
+        </View>
+
+        <Text style={styles.vinText}>VIN: {item.VIN_NUMBER || "N/A"}</Text>
+
+        {isExpanded && (
+          <View style={styles.detailsSection}>
+            <Text style={styles.sectionTitle}>Service Categories:</Text>
+            {item.SERVICE_CATEGORIES.length > 0 ? (
+              item.SERVICE_CATEGORIES.map((cat, index) => (
+                <Text key={index} style={styles.serviceItem}>
+                  • {cat}
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.noServices}>No service categories</Text>
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
     );
   };
 
@@ -102,7 +123,7 @@ export default function VehicleHistoryScreen() {
         <FlatList
           data={history}
           renderItem={renderItem}
-          keyExtractor={(item) => item.INVOICE_NUMBER.toString()}
+          keyExtractor={(item) => item.INVOICE_NUMBER}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -137,34 +158,50 @@ const styles = StyleSheet.create({
     color: Theme.colors.error,
   },
   historyCard: {
-    flexDirection: "column",
     backgroundColor: Theme.colors.grey15,
     padding: 15,
-    marginBottom: 10,
     borderRadius: 10,
+    marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  service: {
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  invoiceNumber: {
     fontSize: 16,
     fontWeight: "bold",
     color: Theme.colors.text,
   },
-  date: {
-    fontSize: 14,
-    color: Theme.colors.primary,
+  amount: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: Theme.colors.magenta,
   },
-  cost: {
+  vinText: {
+    fontSize: 14,
+    color: Theme.colors.grey50,
+  },
+  detailsSection: {
+    marginTop: 10,
+  },
+  sectionTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: Theme.colors.secondary,
+    color: Theme.colors.text,
+    marginBottom: 5,
   },
-  categories: {
+  serviceItem: {
     fontSize: 14,
     color: Theme.colors.text,
-    marginTop: 5,
+  },
+  noServices: {
+    fontSize: 14,
+    color: Theme.colors.grey50,
   },
 });

@@ -9,14 +9,14 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import Theme from "@/constants/theme";
+import Theme from "../constants/theme";
 import axios from "axios";
+import { API_BASE_URL } from "../constants/api";
+
 
 interface SignupResponse {
   message: string;
 }
-
-const API_BASE_URL = "http://localhost:3000/api/auth";
 
 export default function SignupScreen() {
   const [modalVisible, setModalVisible] = useState(false);

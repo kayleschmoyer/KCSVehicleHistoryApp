@@ -11,19 +11,17 @@ import {
   Image,
   Platform,
 } from "react-native";
-import Theme from "@/constants/theme";
+import Theme from "../constants/theme";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import Constants from "expo-constants"; // Fallback for environment variables
+import { API_BASE_URL } from "../constants/api";
 
 // Define the expected structure of the login response
 interface LoginResponse {
   token: string;
   message?: string;
 }
-
-const API_BASE_URL = Constants.manifest?.extra?.API_BASE_URL || "http://localhost:3000/api/auth";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -114,16 +112,11 @@ export default function LoginScreen() {
     <View style={styles.container}>
       {/* Logo */}
       <Image
-        source={require("@/assets/images/kcs-logo.png")}
+        source={require("@/assets/images/klipboard-logo.png")}
         style={{ width: 200, height: 200 }}
         resizeMode="contain"
         accessibilityLabel="KCS Logo"
       />
-
-      {/* Title */}
-      <Text style={styles.title} accessibilityRole="header">
-        Welcome to KCS Vehicle History
-      </Text>
 
       {/* Input Fields */}
       <TextInput

@@ -1,20 +1,68 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import Theme from "@/constants/theme";
+import Theme from "../../constants/theme";
+import LogoutButton from "../../components/LogoutButton";
+import * as jwtDecode from "jwt-decode";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+
+// Define the structure of the decoded token
+interface DecodedToken {
+  CUSTOMER_NUMBER: string;
+  FIRST_NAME?: string;
+  LAST_NAME?: string;
+  EMAILADDRESS?: string;
+  iat: number;
+  exp: number;
+}
 
 export default function ProfileScreen() {
+  const [fullName, setFullName] = useState("Loading...");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        let token;
+        if (Platform.OS === "web") {
+          token = localStorage.getItem("authToken");
+        } else {
+          token = await AsyncStorage.getItem("authToken");
+        }
+
+        if (token) {
+          const decoded: DecodedToken = jwtDecode.default(token);
+          const name = `${decoded.FIRST_NAME || "Unknown"} ${decoded.LAST_NAME || ""}`.trim();
+          setFullName(name);
+          setEmail(decoded.EMAILADDRESS || "No email");
+        } else {
+          setFullName("Guest");
+          setEmail("");
+        }
+      } catch (error) {
+        console.error("Failed to load user info:", error);
+        setFullName("Error loading name");
+        setEmail("");
+      }
+    };
+
+    loadUserInfo();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Image
         source={{ uri: "https://via.placeholder.com/150" }}
         style={styles.profileImage}
       />
-      <Text style={styles.name}>John Doe</Text>
-      <Text style={styles.email}>johndoe@example.com</Text>
+      <Text style={styles.name}>{fullName}</Text>
+      <Text style={styles.email}>{email}</Text>
 
       <TouchableOpacity style={styles.editButton}>
         <Text style={styles.editButtonText}>Edit Profile</Text>
       </TouchableOpacity>
+
+      <LogoutButton />
     </View>
   );
 }
@@ -57,7 +105,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   editButtonText: {
-    color: Theme.colors.text,
+    color: Theme.colors.background,
     fontWeight: "bold",
     fontSize: 16,
   },
