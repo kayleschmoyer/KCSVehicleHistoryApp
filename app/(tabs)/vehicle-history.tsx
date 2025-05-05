@@ -48,7 +48,7 @@ export default function VehicleHistoryScreen() {
         }
 
         const response = await axios.get<{ history: VehicleHistory[] }>(
-          `http://192.168.4.34:3000/api/vehicles/history?vin=${vin}`,
+          `http://192.168.7.185:3000/api/vehicles/history?vin=${vin}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 

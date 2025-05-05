@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import Theme from "@/constants/theme";
+import Theme from "../constants/theme";
 
 export default function RootLayout() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);

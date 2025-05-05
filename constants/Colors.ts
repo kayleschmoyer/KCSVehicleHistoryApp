@@ -18,6 +18,8 @@ const lightTheme = {
   border: baseColors.grey30,
   cardBackground: baseColors.grey15,
   placeholder: baseColors.grey50,
+  tint: baseColors.magenta,
+  icon: baseColors.graphite,
 };
 
 const darkTheme = {
@@ -28,6 +30,8 @@ const darkTheme = {
   border: baseColors.grey30,
   cardBackground: "#1D1D1D",
   placeholder: baseColors.grey30,
+  tint: baseColors.white,
+  icon: baseColors.magenta,
 };
 
 export const Colors = {

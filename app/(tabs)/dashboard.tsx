@@ -71,7 +71,7 @@ export default function DashboardScreen() {
         }
 
         const response = await axios.get<{ cars: Vehicle[] }>(
-          "http://192.168.4.34:3000/api/vehicles/",
+          "http://192.168.7.185:3000/api/vehicles/",
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
