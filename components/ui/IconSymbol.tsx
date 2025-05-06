@@ -12,6 +12,7 @@ const MAPPING = {
   'car': 'directions-car',
   'shield.fill': 'shield',
   'person.circle': 'account-circle',
+  'hammer.fill': 'build',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

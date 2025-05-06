@@ -1,8 +1,7 @@
-// app/(tabs)/_layout.tsx
-
 import React, { useEffect, useRef } from 'react';
 import { Tabs } from 'expo-router';
-import { Platform, Pressable, Animated, View } from 'react-native';
+import { Platform, Pressable, Animated, View, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,94 +16,107 @@ export default function TabLayout() {
   const bg = Colors[scheme].background;
   const gradStart = Colors[scheme].primary || tint;
   const gradEnd = Colors[scheme].secondary || tint;
+  const router = useRouter();
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        // hide the labels for a clean icon-only look
-        tabBarShowLabel: false,
-
-        // pill-shaped, floating bar
-        tabBarStyle: {
-          position: 'absolute',
-          left: 16,
-          right: 16,
-          bottom: 16,
-          height: 56,
-          borderRadius: 32,
-          backgroundColor: bg,
-          ...Platform.select({
-            ios: {
-              shadowColor: '#000',
-              shadowOpacity: 0.12,
-              shadowOffset: { width: 0, height: 4 },
-              shadowRadius: 8,
-            },
-            android: { elevation: 8 },
-          }),
-        },
-
-        // draw a tiny gradient stripe across the top of the pill
-        tabBarBackground: () => (
-          <LinearGradient
-            colors={[gradStart, gradEnd]}
-            start={[0, 0]}
-            end={[1, 0]}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 4,
-              borderTopLeftRadius: 32,
-              borderTopRightRadius: 32,
-            }}
-          />
-        ),
-
-        // custom button to animate icon scale + haptic on press
-        tabBarButton: (props) => <AnimatedTabButton {...props} />,
-
-        tabBarActiveTintColor: tint,
-        tabBarInactiveTintColor: inactive,
-      }}
-    >
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={24} color={color} />,
+    <View style={{ flex: 1 }}>
+      <View style={{
+        height: 60,
+        backgroundColor: bg,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+      }}>
+        <TouchableOpacity
+          style={{ padding: 8 }}
+          onPress={() => router.push('/profile')}
+        >
+          <IconSymbol name="person.circle" size={24} color={tint} />
+        </TouchableOpacity>
+      </View>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarStyle: {
+            position: 'absolute',
+            left: 16,
+            right: 16,
+            bottom: 16,
+            height: 56,
+            borderRadius: 32,
+            backgroundColor: bg,
+            paddingHorizontal: 12,
+            justifyContent: 'space-between',
+            ...Platform.select({
+              ios: {
+                shadowColor: '#000',
+                shadowOpacity: 0.12,
+                shadowOffset: { width: 0, height: 4 },
+                shadowRadius: 8,
+              },
+              android: { elevation: 8 },
+            }),
+          },
+          tabBarBackground: () => (
+            <LinearGradient
+              colors={[gradStart, gradEnd]}
+              start={[0, 0]}
+              end={[1, 0]}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 4,
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+              }}
+            />
+          ),
+          tabBarButton: (props) => <AnimatedTabButton {...props} />,
+          tabBarActiveTintColor: tint,
+          tabBarInactiveTintColor: inactive,
         }}
-      />
+      >
+        <Tabs.Screen
+          name="dashboard"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color }) => <IconSymbol name="house.fill" size={24} color={color} />,
+          }}
+        />
 
-      <Tabs.Screen
-        name="vehicle-history"
-        options={{
-          title: 'Your Vehicles',
-          tabBarIcon: ({ color }) => <IconSymbol name="car" size={24} color={color} />,
-        }}
-      />
+        <Tabs.Screen
+          name="vehicle-history"
+          options={{
+            title: 'Your Vehicles',
+            tabBarIcon: ({ color }) => <IconSymbol name="car" size={24} color={color} />,
+          }}
+        />
 
-      <Tabs.Screen
-        name="warranty"
-        options={{
-          title: 'Warranties',
-          tabBarIcon: ({ color }) => <IconSymbol name="shield.fill" size={24} color={color} />,
-        }}
-      />
+        <Tabs.Screen
+          name="active-workorders"
+          options={{
+            title: 'Active Workorders',
+            tabBarIcon: ({ color }) => <IconSymbol name="hammer.fill" size={24} color={color} />,
+          }}
+        />
 
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <IconSymbol name="person.circle" size={24} color={color} />,
-        }}
-      />
-    </Tabs>
+        <Tabs.Screen
+          name="warranty"
+          options={{
+            title: 'Warranties',
+            tabBarIcon: ({ color }) => <IconSymbol name="shield.fill" size={24} color={color} />,
+          }}
+        />
+      </Tabs>
+    </View>
   );
 }
-
 
 /**
  * Wrap each tab child in a Pressable + Animated.View so the icon smoothly
@@ -129,7 +141,14 @@ function AnimatedTabButton({
   return (
     <Pressable
       onPress={onPress}
-      style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+      style={{
+        flex: 1,
+        flexGrow: 1,
+        maxWidth: 80,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+      }}
     >
       <Animated.View style={{ transform: [{ scale }] }}>
         {children}
